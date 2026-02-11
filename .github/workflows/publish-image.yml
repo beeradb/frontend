@@ -20,7 +20,7 @@ on:
                 description: Make image private (true) or public (false)
                 required: false
                 type: boolean
-                default: true
+                default: false
     workflow_call:
         inputs:
             tags:
@@ -58,9 +58,9 @@ jobs:
                 id: image-name
                 run: |
                     if [ "${{ inputs.private }}" = "true" ]; then
-                        echo "image-name=gcr.io/hedera-registry/blockscout-frontend-private" >> $GITHUB_OUTPUT
+                        echo "image-name=ghcr.io/beeradb/blockscout-frontend-private" >> $GITHUB_OUTPUT
                     else
-                        echo "image-name=gcr.io/hedera-registry/blockscout-frontend" >> $GITHUB_OUTPUT
+                        echo "image-name=ghcr.io/beeradb/blockscout-frontend" >> $GITHUB_OUTPUT
                     fi
 
             # Will automatically make nice tags, see the table here https://github.com/docker/metadata-action#basic
@@ -97,9 +97,7 @@ jobs:
                     docker-image: ${{ steps.image-name.outputs.image-name }}
                     docker-username: ${{ github.actor }}
                     docker-password: ${{ secrets.GITHUB_TOKEN }}
-                    docker-remote-multi-platform: true
-                    docker-arm-host: ${{ secrets.ARM_RUNNER_HOSTNAME }}
-                    docker-arm-host-key: ${{ secrets.ARM_RUNNER_KEY }}
+                    docker-remote-multi-platform: false
 
             -   name: Build and push
                 uses: docker/build-push-action@v5
