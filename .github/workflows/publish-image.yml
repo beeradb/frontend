@@ -70,10 +70,9 @@ jobs:
                 with:
                     images: ${{ steps.image-name.outputs.image-name }}
                     flavor: |
-                        latest=false
+                        latest=true
                     tags: |
                         type=ref,event=tag
-                        ${{ inputs.tags }}
 
             -   name: Add SHORT_SHA env property with commit short sha
                 run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
