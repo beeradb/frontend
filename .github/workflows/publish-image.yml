@@ -1,5 +1,6 @@
 name: Publish Docker image
-
+env:
+  REGISTRY: ghcr.io
 on:
     workflow_dispatch:
         inputs:
@@ -15,12 +16,12 @@ on:
                 description: Image platforms (you can specify multiple platforms separated by comma)
                 required: false
                 type: string
-                default: linux/amd64,linux/arm64/v8
+                default: linux/amd64
             private:
                 description: Make image private (true) or public (false)
                 required: false
                 type: boolean
-                default: true
+                default: false
     workflow_call:
         inputs:
             tags:
@@ -49,7 +50,7 @@ permissions:
 jobs:
     run:
         name: Run
-        runs-on: build
+        runs-on: ubuntu-24.04
         steps:
             -   name: Check out the repo
                 uses: actions/checkout@v4
@@ -58,22 +59,10 @@ jobs:
                 id: image-name
                 run: |
                     if [ "${{ inputs.private }}" = "true" ]; then
-                        echo "image-name=ghcr.io/blockscout/frontend-private" >> $GITHUB_OUTPUT
+                        echo "image-name=ghcr.io/beeradb/blockscout-frontend-private" >> $GITHUB_OUTPUT
                     else
-                        echo "image-name=ghcr.io/blockscout/frontend" >> $GITHUB_OUTPUT
+                        echo "image-name=ghcr.io/beeradb/blockscout-frontend" >> $GITHUB_OUTPUT
                     fi
-
-            # Will automatically make nice tags, see the table here https://github.com/docker/metadata-action#basic
-            -   name: Docker meta
-                id: meta
-                uses: docker/metadata-action@v5
-                with:
-                    images: ${{ steps.image-name.outputs.image-name }}
-                    flavor: |
-                        latest=false
-                    tags: |
-                        type=ref,event=tag
-                        ${{ inputs.tags }}
 
             -   name: Add SHORT_SHA env property with commit short sha
                 run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
@@ -90,16 +79,12 @@ jobs:
                     echo "image_name: $IMAGE_NAME"
                     echo "is_private: $IS_PRIVATE"
 
-            -   name: Setup repo
-                uses: blockscout/actions/.github/actions/setup-multiarch-buildx@no-metadata
-                id: setup
-                with:
-                    docker-image: ${{ steps.image-name.outputs.image-name }}
-                    docker-username: ${{ github.actor }}
-                    docker-password: ${{ secrets.GITHUB_TOKEN }}
-                    docker-remote-multi-platform: true
-                    docker-arm-host: ${{ secrets.ARM_RUNNER_HOSTNAME }}
-                    docker-arm-host-key: ${{ secrets.ARM_RUNNER_KEY }}
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+              with:
+                registry: ${{ env.REGISTRY }}
+                username: ${{ github.actor }}
+                password: ${{ secrets.GITHUB_TOKEN }}
 
             -   name: Build and push
                 uses: docker/build-push-action@v5
@@ -108,9 +93,8 @@ jobs:
                     file: ./Dockerfile
                     push: true
                     cache-from: type=gha
-                    tags: ${{ steps.meta.outputs.tags }}
+                    tags: test
                     platforms: ${{ inputs.platforms }}
-                    labels: ${{ steps.meta.outputs.labels }}
                     build-args: |
                         GIT_COMMIT_SHA=${{ env.SHORT_SHA }}
                         GIT_TAG=${{ github.ref_type == 'tag' && github.ref_name || '' }}
