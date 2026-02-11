@@ -59,9 +59,9 @@ jobs:
                 id: image-name
                 run: |
                     if [ "${{ inputs.private }}" = "true" ]; then
-                        echo "image-name=ghcr.io/beeradb/blockscout-frontend-private" >> $GITHUB_OUTPUT
+                        echo "image-name=ghcr.io/beeradb//frontend/blockscout-frontend-private" >> $GITHUB_OUTPUT
                     else
-                        echo "image-name=ghcr.io/beeradb/blockscout-frontend" >> $GITHUB_OUTPUT
+                        echo "image-name=ghcr.io/beeradb/frontend/blockscout-frontend" >> $GITHUB_OUTPUT
                     fi
 
             -   name: Add SHORT_SHA env property with commit short sha
@@ -79,12 +79,12 @@ jobs:
                     echo "image_name: $IMAGE_NAME"
                     echo "is_private: $IS_PRIVATE"
 
-            - name: Login to GitHub Container Registry
-              uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+            - name: Log in to the Container registry
+              uses: docker/login-action@v3
               with:
-                registry: ${{ env.REGISTRY }}
-                username: ${{ github.repository_owner }}
-                password: ${{ secrets.REGISTRY_TOKEN }}
+                registry: ghcr.io
+                username: ${{ github.actor }}
+                password: ${{ secrets.GITHUB_TOKEN }}
 
             -   name: Build and push
                 uses: docker/build-push-action@v5
