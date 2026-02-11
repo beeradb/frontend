@@ -90,15 +90,6 @@ jobs:
                     echo "image_name: $IMAGE_NAME"
                     echo "is_private: $IS_PRIVATE"
 
-            -   name: Setup repo
-                uses: blockscout/actions/.github/actions/setup-multiarch-buildx@no-metadata
-                id: setup
-                with:
-                    docker-image: ${{ steps.image-name.outputs.image-name }}
-                    docker-username: ${{ github.actor }}
-                    docker-password: ${{ secrets.GITHUB_TOKEN }}
-                    docker-remote-multi-platform: false
-
             -   name: Build and push
                 uses: docker/build-push-action@v5
                 with:
