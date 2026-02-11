@@ -1,5 +1,6 @@
 name: Publish Docker image
-
+env:
+  REGISTRY: ghcr.io
 on:
     workflow_dispatch:
         inputs:
@@ -77,6 +78,13 @@ jobs:
                     echo "ref_name: $REF_NAME"
                     echo "image_name: $IMAGE_NAME"
                     echo "is_private: $IS_PRIVATE"
+
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+              with:
+                registry: ${{ env.REGISTRY }}
+                username: ${{ github.actor }}
+                password: ${{ secrets.GITHUB_TOKEN }}
 
             -   name: Build and push
                 uses: docker/build-push-action@v5
